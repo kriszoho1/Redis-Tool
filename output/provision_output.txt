@@ -1,0 +1,166 @@
+Docker 29.5.3 found
+ Ansible 2.16.3 found
+Proceeding...
+---------------------------------------------------------------------------
+Running: ansible-playbook -i /home/qwer/submission/ansible/inventory/hosts.ini /home/qwer/submission/ansible/playbooks/provision.yml --extra-vars redis_version=7.0.15 container_runtime=docker
+
+PLAY [redis_nodes] *********************************************************************************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************************************************
+ok: [redis-node-5]
+ok: [redis-node-2]
+ok: [redis-node-4]
+ok: [redis-node-1]
+ok: [redis-node-3]
+ok: [redis-node-6]
+
+TASK [redis : Check if Redis binary exists] ********************************************************************************************************************************
+ok: [redis-node-2]
+ok: [redis-node-1]
+ok: [redis-node-4]
+ok: [redis-node-3]
+ok: [redis-node-5]
+ok: [redis-node-6]
+
+TASK [redis : Get live running Redis version from memory] ******************************************************************************************************************
+ok: [redis-node-5]
+ok: [redis-node-4]
+ok: [redis-node-2]
+ok: [redis-node-3]
+ok: [redis-node-1]
+ok: [redis-node-6]
+
+TASK [redis : Install build dependencies] **********************************************************************************************************************************
+ok: [redis-node-4]
+ok: [redis-node-1]
+ok: [redis-node-5]
+ok: [redis-node-2]
+ok: [redis-node-3]
+ok: [redis-node-6]
+
+TASK [redis : Download and extract Redis source code] **********************************************************************************************************************
+skipping: [redis-node-1]
+skipping: [redis-node-2]
+skipping: [redis-node-3]
+skipping: [redis-node-4]
+skipping: [redis-node-5]
+skipping: [redis-node-6]
+
+TASK [redis : Compile Redis from source] ***********************************************************************************************************************************
+skipping: [redis-node-1]
+skipping: [redis-node-2]
+skipping: [redis-node-3]
+skipping: [redis-node-4]
+skipping: [redis-node-5]
+skipping: [redis-node-6]
+
+TASK [redis : Install Redis binaries] **************************************************************************************************************************************
+skipping: [redis-node-1]
+skipping: [redis-node-2]
+skipping: [redis-node-3]
+skipping: [redis-node-4]
+skipping: [redis-node-5]
+skipping: [redis-node-6]
+
+TASK [redis : Create Redis configuration directory] ************************************************************************************************************************
+ok: [redis-node-1]
+ok: [redis-node-2]
+ok: [redis-node-5]
+ok: [redis-node-4]
+ok: [redis-node-3]
+ok: [redis-node-6]
+
+TASK [redis : Deploy redis.conf] *******************************************************************************************************************************************
+ok: [redis-node-2]
+ok: [redis-node-1]
+ok: [redis-node-3]
+ok: [redis-node-4]
+ok: [redis-node-5]
+ok: [redis-node-6]
+
+TASK [redis : Terminate old Redis version process to cycle memory footprint] ***********************************************************************************************
+skipping: [redis-node-1]
+skipping: [redis-node-2]
+skipping: [redis-node-3]
+skipping: [redis-node-4]
+skipping: [redis-node-5]
+skipping: [redis-node-6]
+
+TASK [redis : Wait for port 6379 to clear out of the system environment] ***************************************************************************************************
+skipping: [redis-node-1]
+skipping: [redis-node-2]
+skipping: [redis-node-3]
+skipping: [redis-node-4]
+skipping: [redis-node-5]
+skipping: [redis-node-6]
+
+TASK [redis : Start Redis Cluster Node] ************************************************************************************************************************************
+changed: [redis-node-1]
+changed: [redis-node-2]
+changed: [redis-node-3]
+changed: [redis-node-4]
+changed: [redis-node-5]
+changed: [redis-node-6]
+
+TASK [redis : Wait for Redis nodes to be ready] ****************************************************************************************************************************
+ok: [redis-node-5]
+ok: [redis-node-2]
+ok: [redis-node-3]
+ok: [redis-node-1]
+ok: [redis-node-4]
+ok: [redis-node-6]
+
+TASK [redis : Verify live running version inside memory space matches goal] ************************************************************************************************
+ok: [redis-node-1]
+ok: [redis-node-2]
+ok: [redis-node-3]
+ok: [redis-node-4]
+ok: [redis-node-5]
+ok: [redis-node-6]
+
+TASK [redis : Enforce strict version correctness validation assertion] *****************************************************************************************************
+ok: [redis-node-1] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [redis-node-2] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [redis-node-3] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [redis-node-4] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [redis-node-5] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [redis-node-6] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [redis : Check if cluster is already formed] **************************************************************************************************************************
+skipping: [redis-node-2]
+skipping: [redis-node-3]
+skipping: [redis-node-4]
+skipping: [redis-node-5]
+skipping: [redis-node-6]
+ok: [redis-node-1]
+
+TASK [redis : Form Redis Cluster] ******************************************************************************************************************************************
+skipping: [redis-node-1]
+
+PLAY RECAP *****************************************************************************************************************************************************************
+redis-node-1               : ok=11   changed=1    unreachable=0    failed=0    skipped=6    rescued=0    ignored=0
+redis-node-2               : ok=10   changed=1    unreachable=0    failed=0    skipped=6    rescued=0    ignored=0
+redis-node-3               : ok=10   changed=1    unreachable=0    failed=0    skipped=6    rescued=0    ignored=0
+redis-node-4               : ok=10   changed=1    unreachable=0    failed=0    skipped=6    rescued=0    ignored=0
+redis-node-5               : ok=10   changed=1    unreachable=0    failed=0    skipped=6    rescued=0    ignored=0
+redis-node-6               : ok=10   changed=1    unreachable=0    failed=0    skipped=6    rescued=0    ignored=0
+
+Provision complete!

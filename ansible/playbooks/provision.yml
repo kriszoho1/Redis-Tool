@@ -1,0 +1,6 @@
+---
+- hosts: redis_nodes
+  become: true
+
+  roles:
+    - redis

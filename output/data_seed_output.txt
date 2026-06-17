@@ -1,0 +1,14 @@
+./redis-tool data seed --keys 1000
+Docker 29.5.3 found
+ Ansible 2.16.3 found
+Proceeding...
+---------------------------------------------------------------------------
+Initializing seeding sequence for 1000 keys...
+Seeding successfully injected 1000 keys into the distributed distributed cluster topology.
+qwer@DESKTOP-SKGD65D:~/submission$ ./redis-tool data verify
+Docker 29.5.3 found
+ Ansible 2.16.3 found
+Proceeding...
+---------------------------------------------------------------------------
+Executing cluster verification scan...
+VERIFICATION RESULTS: PASS (Successfully validated 1000/1000 keys)

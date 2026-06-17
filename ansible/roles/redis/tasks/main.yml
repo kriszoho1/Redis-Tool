@@ -1,0 +1,360 @@
+# ---
+# - name: Update apt cache
+#   apt:
+#     update_cache: yes
+
+# - name: Install Redis
+#   apt:
+#     name: redis-server
+#     state: present
+
+# - name: Deploy redis.conf
+#   template:
+#     src: redis.conf.j2
+#     dest: /etc/redis/redis.conf
+#     owner: redis
+#     group: redis
+#     mode: '0644'
+
+# - name: Restart Redis
+#   service:
+#     name: redis-server
+#     state: restarted
+
+# - name: Start Redis service
+#   service:
+#     name: redis-server
+#     state: started
+
+# - name: Enable Redis service
+#   service:
+#     name: redis-server
+#     enabled: true
+
+##############################################
+# ---
+# # 1. Check if the redis-server binary exists anywhere in the system path
+# - name: Check if Redis binary exists
+#   stat:
+#     path: /usr/local/bin/redis-server
+#   register: redis_binary
+
+# # 2. If the binary exists, run it to grab its exact version number
+# - name: Get installed Redis version
+#   shell: "redis-server --version | awk '{print $3}' | cut -d= -f2"
+#   register: current_redis_version
+#   when: redis_binary.stat.exists
+#   changed_when: false
+
+# # 3. Now, guard your download/compile tasks using a 'when' condition!
+# - name: Download and extract Redis source code
+#   unarchive:
+#     src: "https://download.redis.io/releases/redis-{{ redis_version }}.tar.gz"
+#     dest: /tmp/
+#     remote_src: yes
+#   # ONLY run this if Redis isn't installed at all, OR if the version doesn't match our target
+#   when: not redis_binary.stat.exists or current_redis_version.stdout != redis_version
+
+# # 1. Install the tools needed to compile C code inside Ubuntu
+# - name: Install build dependencies
+#   apt:
+#     name:
+#       - build-essential
+#       - wget
+#       - pkg-config
+#     state: present
+#     update_cache: yes
+
+# # 2. Download and unpack Redis directly from the official site
+# - name: Download and extract Redis source code
+#   unarchive:
+#     src: "https://download.redis.io/releases/redis-{{ redis_version }}.tar.gz"
+#     dest: /tmp/
+#     remote_src: yes
+#     creates: "/tmp/redis-{{ redis_version }}"
+
+# # 3. Compile Redis using 'make' inside the container
+# - name: Compile Redis from source
+#   make:
+#     chdir: "/tmp/redis-{{ redis_version }}"
+
+# # 4. Install the compiled binaries globally
+# - name: Install Redis binaries
+#   make:
+#     chdir: "/tmp/redis-{{ redis_version }}"
+#     target: install
+
+# # 5. Create a dedicated configuration directory for Redis
+# - name: Create Redis configuration directory
+#   file:
+#     path: /etc/redis
+#     state: directory
+#     mode: '0755'
+
+# # 6. Deploy your custom cluster template config file
+# - name: Deploy redis.conf
+#   template:
+#     src: redis.conf.j2
+#     dest: /etc/redis/redis.conf
+#     mode: '0644'
+
+# # 7. Start Redis in the background using the newly compiled binary
+# - name: Start Redis Cluster Node
+#   shell: "redis-server /etc/redis/redis.conf --daemonize yes"
+#   changed_when: false
+
+# # 8. Pause until Redis is fully awake and listening on its data port
+# - name: Wait for Redis nodes to be ready
+#   wait_for:
+#     port: 6379
+#     timeout: 10
+
+# # 9. Form the cluster using a single execution driven by node-1
+# - name: Form Redis Cluster
+#   shell: |
+#     redis-cli --cluster create \
+#     10.10.0.11:6379 10.10.0.12:6379 10.10.0.13:6379 \
+#     10.10.0.14:6379 10.10.0.15:6379 10.10.0.16:6379 \
+#     --cluster-replicas 1 --cluster-yes
+#   when: inventory_hostname == 'redis-node-1'
+#   run_once: true
+
+# # 9. Ask node-1 if it already sees a cluster state
+# - name: Check if cluster is already formed
+#   shell: "redis-cli cluster info | grep cluster_state"
+#   register: cluster_check
+#   when: inventory_hostname == 'redis-node-1'
+#   failed_when: false # Prevent Ansible from crashing if it returns an error
+#   changed_when: false
+
+# # 10. Form the cluster ONLY if 'cluster_state:ok' was NOT found
+# - name: Form Redis Cluster
+#   shell: |
+#     redis-cli --cluster create \
+#     10.10.0.11:6379 10.10.0.12:6379 10.10.0.13:6379 \
+#     10.10.0.14:6379 10.10.0.15:6379 10.10.0.16:6379 \
+#     --cluster-replicas 1 --cluster-yes
+#   # Only run if node-1 is executing, AND "cluster_state" was not found in the step above
+#   when: 
+#     - inventory_hostname == 'redis-node-1'
+#     - "'cluster_state:ok' not in cluster_check.stdout"
+#   run_once: true
+#############################################
+
+# ---
+# # 1. Check if the redis-server binary exists anywhere in the system path
+# - name: Check if Redis binary exists
+#   stat:
+#     path: /usr/local/bin/redis-server
+#   register: redis_binary
+
+# # 2. If the binary exists, run it to grab its exact version number string
+# - name: Get installed Redis version
+#   shell: "redis-server --version | awk '{print $3}' | cut -d= -f2"
+#   register: current_redis_version
+#   when: redis_binary.stat.exists
+#   changed_when: false
+
+# # 3. Install the tools needed to compile C code inside Ubuntu
+# - name: Install build dependencies
+#   apt:
+#     name:
+#       - build-essential
+#       - wget
+#       - pkg-config
+#     state: present
+#     update_cache: yes
+
+# # 4. Download and unpack Redis source code ONLY if version doesn't match
+# - name: Download and extract Redis source code
+#   unarchive:
+#     src: "https://download.redis.io/releases/redis-{{ redis_version }}.tar.gz"
+#     dest: /tmp/
+#     remote_src: yes
+#     creates: "/tmp/redis-{{ redis_version }}"
+#   when: not redis_binary.stat.exists or current_redis_version.stdout != redis_version
+
+# # 5. Compile Redis using 'make' inside the container
+# - name: Compile Redis from source
+#   make:
+#     chdir: "/tmp/redis-{{ redis_version }}"
+#     params:
+#       # The '-j4' flag instructs the compiler to use 4 CPU threads simultaneously!
+#       REG_FLAGS: "-j4"
+#   when: not redis_binary.stat.exists or current_redis_version.stdout != redis_version
+
+# # 6. Install the compiled binaries globally
+# - name: Install Redis binaries
+#   make:
+#     chdir: "/tmp/redis-{{ redis_version }}"
+#     target: install
+#   when: not redis_binary.stat.exists or current_redis_version.stdout != redis_version
+
+# # 7. Create a dedicated configuration directory for Redis
+# - name: Create Redis configuration directory
+#   file:
+#     path: /etc/redis
+#     state: directory
+#     mode: '0755'
+
+# # 8. Deploy your custom cluster template config file
+# - name: Deploy redis.conf
+#   template:
+#     src: redis.conf.j2
+#     dest: /etc/redis/redis.conf
+#     mode: '0644'
+
+# # 9. Start Redis in the background using the newly compiled binary
+# - name: Start Redis Cluster Node
+#   shell: "redis-server /etc/redis/redis.conf --daemonize yes"
+#   changed_when: false
+
+# # 10. Pause until Redis is fully awake and listening on its data port
+# - name: Wait for Redis nodes to be ready
+#   wait_for:
+#     port: 6379
+#     timeout: 10
+
+# # 11. Ask node-1 if it already sees a cluster state
+# - name: Check if cluster is already formed
+#   shell: "redis-cli cluster info | grep cluster_state"
+#   register: cluster_check
+#   when: inventory_hostname == 'redis-node-1'
+#   failed_when: false
+#   changed_when: false
+
+# # 12. Form the cluster ONLY if 'cluster_state:ok' was NOT found on node-1
+# - name: Form Redis Cluster
+#   shell: |
+#     redis-cli --cluster create \
+#     10.10.0.11:6379 10.10.0.12:6379 10.10.0.13:6379 \
+#     10.10.0.14:6379 10.10.0.15:6379 10.10.0.16:6379 \
+#     --cluster-replicas 1 --cluster-yes
+#   when: 
+#     - inventory_hostname == 'redis-node-1'
+#     - cluster_check.stdout is not defined or 'cluster_state:ok' not in cluster_check.stdout
+#   run_once: true
+
+##################################################
+
+---
+# 1. Check if the redis-server binary exists anywhere in the system path
+- name: Check if Redis binary exists
+  stat:
+    path: /usr/local/bin/redis-server
+  register: redis_binary
+
+# 2. If the binary exists, query the LIVE running process memory for its version
+# We use redis-cli INFO rather than the disk binary to ensure we catch what is active in RAM!
+- name: Get live running Redis version from memory
+  shell: "redis-cli -p 6379 INFO server | grep redis_version | cut -d: -f2 | tr -d '\r\n'"
+  register: current_redis_version
+  when: redis_binary.stat.exists
+  failed_when: false
+  changed_when: false
+
+# 3. Install the tools needed to compile C code inside Ubuntu
+- name: Install build dependencies
+  apt:
+    name:
+      - build-essential
+      - wget
+      - pkg-config
+    state: present
+    update_cache: yes
+
+# 4. Download and unpack Redis source code ONLY if version doesn't match target
+- name: Download and extract Redis source code
+  unarchive:
+    src: "https://download.redis.io/releases/redis-{{ redis_version }}.tar.gz"
+    dest: /tmp/
+    remote_src: yes
+    creates: "/tmp/redis-{{ redis_version }}"
+    # Fallback to comparison if lookup variable fails or string is empty
+  when: not redis_binary.stat.exists or (current_redis_version.stdout != redis_version)
+
+# 5. Compile Redis using 'make' inside the container
+- name: Compile Redis from source
+  make:
+    chdir: "/tmp/redis-{{ redis_version }}"
+    params:
+      REG_FLAGS: "-j4"
+  when: not redis_binary.stat.exists or (current_redis_version.stdout != redis_version)
+
+# 6. Install the compiled binaries globally
+- name: Install Redis binaries
+  make:
+    chdir: "/tmp/redis-{{ redis_version }}"
+    target: install
+  when: not redis_binary.stat.exists or (current_redis_version.stdout != redis_version)
+
+# 7. Create a dedicated configuration directory for Redis
+- name: Create Redis configuration directory
+  file:
+    path: /etc/redis
+    state: directory
+    mode: '0755'
+
+# 8. Deploy your custom cluster template config file
+- name: Deploy redis.conf
+  template:
+    src: redis.conf.j2
+    dest: /etc/redis/redis.conf
+    mode: '0644'
+
+# 🚨 ALTERNATIVE INTERVENTION SEQUENCE FOR UPGRADES 🚨
+# 9. Gracefully terminate the old stale process ONLY during an active version mismatch
+- name: Terminate old Redis version process to cycle memory footprint
+  shell: "redis-cli -p 6379 shutdown nosave"
+  ignore_errors: true
+  when: redis_binary.stat.exists and (current_redis_version.stdout != redis_version)
+
+# 10. Pause to guarantee the port completely closes out of the OS network stack
+- name: Wait for port 6379 to clear out of the system environment
+  wait_for:
+    port: 6379
+    state: stopped
+    timeout: 15
+  when: redis_binary.stat.exists and (current_redis_version.stdout != redis_version)
+
+# 11. Start Redis using the newly compiled binary asset
+- name: Start Redis Cluster Node
+  shell: "redis-server /etc/redis/redis.conf --daemonize yes"
+
+# 12. Pause until Redis is fully awake and listening on its data port
+- name: Wait for Redis nodes to be ready
+  wait_for:
+    port: 6379
+    timeout: 10
+
+# 13. HARD VERIFICATION ASSET: Assert that the live running process matches our target choice
+- name: Verify live running version inside memory space matches goal
+  shell: "redis-cli -p 6379 INFO server | grep redis_version | cut -d: -f2 | tr -d '\r\n'"
+  register: post_upgrade_version
+  changed_when: false
+
+- name: Enforce strict version correctness validation assertion
+  assert:
+    that:
+      - post_upgrade_version.stdout == redis_version
+    fail_msg: "CRITICAL FAIL: Expected node to boot running v{{ redis_version }}, but it is running v{{ post_upgrade_version.stdout }}"
+
+# 14. Ask node-1 if it already sees a cluster state
+- name: Check if cluster is already formed
+  shell: "redis-cli cluster info | grep cluster_state"
+  register: cluster_check
+  when: inventory_hostname == 'redis-node-1'
+  failed_when: false
+  changed_when: false
+
+# 15. Form the cluster ONLY if 'cluster_state:ok' was NOT found on node-1
+- name: Form Redis Cluster
+  shell: |
+    redis-cli --cluster create \
+    10.10.0.11:6379 10.10.0.12:6379 10.10.0.13:6379 \
+    10.10.0.14:6379 10.10.0.15:6379 10.10.0.16:6379 \
+    --cluster-replicas 1 --cluster-yes
+  when: 
+    - inventory_hostname == 'redis-node-1'
+    - cluster_check.stdout is not defined or 'cluster_state:ok' not in cluster_check.stdout
+  run_once: true
