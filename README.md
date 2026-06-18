@@ -22,14 +22,59 @@ submission/
             └── tasks/
                 └── main.yml    # Master Ansible Compilation and Setup Plays
 
+Prerequisites & Dependency Installation
 
-1. Bringing Up the Container Infrastructure
+Before launching the containers or running the lifecycle utility, you must configure your local controller machine with Python, Ansible, and OpenSSH.
+
+1. Install System Dependencies
+
+On Ubuntu / Debian systems:
+
+sudo apt update
+sudo apt install -y python3 python3-pip ansible openssh-client
+
+On macOS (using Homebrew):
+
+brew install python ansible
+
+2. Install Python Dependencies
+
+The host running the redis-tool execution wrapper requires the Python Redis client library:
+
+pip3 install redis
+
+3. Generate the SSH Keypair
+
+Execute the following ssh-keygen command to generate an unpassphrased $4096$-bit RSA keypair directly into the infra/ folder:
+
+ssh-keygen -t rsa -b 4096 -f infra/redis_cluster_key -N ""
+
+This produces two key files:
+
+infra/redis_cluster_key (The Private Key used by your host machine and Ansible to connect).
+
+infra/redis_cluster_key.pub (The Public Key which will be copied into the containers to authorize incoming SSH connections).
+
+3. Enforce Strict Private Key Permissions
+
+OpenSSH and Ansible will reject your connection attempts if the private deployment key's file permissions are too open. You must set the permission limits right away:
+
+chmod 400 infra/redis_cluster_key
+
+
+Bringing Up the Container Infrastructure
 
 The workspace utilizes an isolated network subnet ($10.10.0.0/24$) to bridge internal container endpoints. This transport strategy runs identically on Docker or Podman.
 
 Option A: Using Docker
 
-To spin up the 6 isolated target container nodes with clean network interfaces, run:
+To spin up the 6 isolated target container nodes with clean network interfaces, run this command:
+
+First run if you're not inside the infra folder already
+
+cd infra
+
+Then run
 
 docker compose down -v && docker compose up -d
 
@@ -38,6 +83,8 @@ Option B: Using Podman
 
 For daemonless, rootless setups, spin up the nodes using Podman:
 
+cd infra
+
 podman-compose down -v && podman-compose up -d
 
 
@@ -45,21 +92,20 @@ Infrastructure Topology
 
 Once initialized, the 6 independent nodes are assigned static IP mappings and bind SSH/Redis interfaces onto host loopbacks as follows:
 
-+--------------------+------------------+---------------+-------------------+------------------+
-| Host Container     | Subnet IP        | SSH Host      | Redis Client      | Cluster Bus      |
-| Name               | Target           | Port          | Port              | Port             |
-+--------------------+------------------+---------------+-------------------+------------------+
-| redis-node-1       | 10.10.0.11       | 3311          | 6371              | 16371            |
-| redis-node-2       | 10.10.0.12       | 3312          | 6372              | 16372            |
-| redis-node-3       | 10.10.0.13       | 3313          | 6373              | 16373            |
-| redis-node-4       | 10.10.0.14       | 3314          | 6374              | 16374            |
-| redis-node-5       | 10.10.0.15       | 3315          | 6375              | 16375            |
-| redis-node-6       | 10.10.0.16       | 3316          | 6376              | 16376            |
-+--------------------+------------------+---------------+-------------------+------------------+
++----------------+------------+----------+--------------+-------------+
+| Host Container | Subnet IP  | SSH Host | Redis Client | Cluster Bus |
++----------------+------------+----------+--------------+-------------+
+| redis-node-1 	 | 10.10.0.11 | 3311 	 | 6371 	| 16371	      |
+| redis-node-2   | 10.10.0.12 | 3312 	 | 6372 	| 16372       |
+| redis-node-3   | 10.10.0.13 | 3313 	 | 6373 	| 16373       |
+| redis-node-4   | 10.10.0.14 | 3314 	 | 6374 	| 16374       |
+| redis-node-5   | 10.10.0.15 | 3315 	 | 6375 	| 16375       |
+| redis-node-6   | 10.10.0.16 | 3316 	 | 6376 	| 16376       |
++----------------+------------+----------+--------------+-------------+
 
 2. Running Each redis-tool Command
 
-All lifecycle operations are triggered from the root of the project. Ensure the utility has execution privileges inside your terminal:
+All operations are triggered from the root of the project. So first cd to the root of the project. Ensure the utility has execution privileges inside your terminal:
 
 chmod +x redis-tool
 
