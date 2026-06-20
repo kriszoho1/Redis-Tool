@@ -1,0 +1,25 @@
+---
+- name: Deploy Redis on all nodes
+  hosts: redis_nodes
+  vars:
+    redis_version: "7.0.15"
+  roles:
+    - redis
+
+- name: Form Redis Cluster
+  hosts: redis-node-1
+  tasks:
+    - name: Check if cluster is already formed
+      command: /usr/local/bin/redis-cli -p 6379 cluster info
+      register: cluster_info
+      changed_when: false
+      failed_when: false
+
+    - name: Form the cluster
+      command: >
+        /usr/local/bin/redis-cli --cluster create
+        10.10.0.11:6379 10.10.0.12:6379 10.10.0.13:6379
+        10.10.0.14:6379 10.10.0.15:6379 10.10.0.16:6379
+        --cluster-replicas 1
+        --cluster-yes
+      when: "'cluster_state:ok' not in cluster_info.stdout"

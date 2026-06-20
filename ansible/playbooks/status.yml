@@ -1,0 +1,36 @@
+---
+- name: Get Redis Cluster Status
+  hosts: redis_nodes
+  gather_facts: false
+  tasks:
+    - name: Check Redis version
+      command: /usr/local/bin/redis-server --version
+      register: redis_ver
+      changed_when: false
+
+    - name: Get Redis Info Server
+      command: /usr/local/bin/redis-cli -p 6379 info server
+      register: redis_info_server
+      changed_when: false
+
+    - name: Get Redis Info Memory
+      command: /usr/local/bin/redis-cli -p 6379 info memory
+      register: redis_info_mem
+      changed_when: false
+
+    - name: Get Redis Info Keyspace
+      command: /usr/local/bin/redis-cli -p 6379 info keyspace
+      register: redis_info_keys
+      changed_when: false
+
+    - name: Get Cluster Nodes
+      command: /usr/local/bin/redis-cli -p 6379 cluster nodes
+      register: redis_cluster_nodes
+      changed_when: false
+      run_once: true
+
+    - name: Get Cluster Info
+      command: /usr/local/bin/redis-cli -p 6379 cluster info
+      register: redis_cluster_info
+      changed_when: false
+      run_once: true

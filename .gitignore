@@ -1,0 +1,3 @@
+# Private cluster keys (CRITICAL: Do not push to git)
+infra/redis_cluster_key
+infra/redis_cluster_key.pub

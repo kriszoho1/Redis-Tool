@@ -1,0 +1,95 @@
+---
+- name: Check if redis-server binary exists
+  stat:
+    path: /usr/local/bin/redis-server
+  register: redis_binary
+
+- name: Get current Redis version
+  command: /usr/local/bin/redis-server --version
+  register: redis_version_raw
+  changed_when: false
+  failed_when: false
+  when: redis_binary.stat.exists
+
+- name: Set facts for version check
+  set_fact:
+    current_redis_version: "{{ redis_version_raw.stdout | regex_search('v=([0-9]+\\.[0-9]+\\.[0-9]+)', '\\1') | first | default('none') }}"
+  when: redis_binary.stat.exists
+
+- name: Determine if compilation is required
+  set_fact:
+    needs_compile: "{{ not redis_binary.stat.exists or current_redis_version != redis_version }}"
+
+- name: Install compilation dependencies
+  apt:
+    name:
+      - build-essential
+      - wget
+      - pkg-config
+      - libssl-dev
+    state: present
+    update_cache: yes
+  when: needs_compile
+
+- name: Download Redis source tarball
+  get_url:
+    url: "https://download.redis.io/releases/redis-{{ redis_version }}.tar.gz"
+    dest: "/tmp/redis-{{ redis_version }}.tar.gz"
+  when: needs_compile
+
+- name: Extract Redis source
+  unarchive:
+    src: "/tmp/redis-{{ redis_version }}.tar.gz"
+    dest: "/tmp"
+    remote_src: yes
+  when: needs_compile
+
+- name: Stop running Redis server (if upgrading)
+  shell: |
+    /usr/local/bin/redis-cli -p 6379 shutdown || true
+    sleep 2
+  when: needs_compile and redis_binary.stat.exists
+
+- name: Compile and install Redis
+  make:
+    chdir: "/tmp/redis-{{ redis_version }}"
+    target: install
+  when: needs_compile
+
+- name: Clean up download archive
+  file:
+    path: "/tmp/redis-{{ redis_version }}.tar.gz"
+    state: absent
+  when: needs_compile
+
+- name: Create Redis configuration directory
+  file:
+    path: /etc/redis
+    state: directory
+    mode: '0755'
+
+- name: Create Redis data directory
+  file:
+    path: /var/lib/redis
+    state: directory
+    mode: '0755'
+
+- name: Deploy redis.conf configuration
+  template:
+    src: redis.conf.j2
+    dest: /etc/redis/redis.conf
+    mode: '0644'
+  register: conf_changed
+
+- name: Restart Redis if configuration changed
+  shell: |
+    /usr/local/bin/redis-cli -p 6379 shutdown || true
+    sleep 1
+    /usr/local/bin/redis-server /etc/redis/redis.conf
+  when: conf_changed.changed
+
+- name: Ensure Redis is running
+  shell: |
+    pgrep -x redis-server || /usr/local/bin/redis-server /etc/redis/redis.conf
+  register: startup_check
+  changed_when: false

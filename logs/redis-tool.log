@@ -1,0 +1,1 @@
+{"timestamp": "2026-06-20T17:36:59.980782+00:00", "command": "prereq", "action": "check_all", "status": "SUCCESS", "node": null, "message": "Runtime: docker, Ansible: 2.16.3"}

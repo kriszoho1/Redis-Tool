@@ -1,0 +1,25 @@
+Checking prerequisites...
+✓ Docker 29.5.3, build d1c06ef found
+✓ Ansible 2.16.3 found
+Proceeding...
+Bringing up infrastructure with docker compose...
+✓ Infrastructure containers are running.
+Waiting for SSH ports to become reachable...
+✓ All nodes are ready via SSH.
+Cluster is already running version 7.0.15. Checking for configuration updates...
+✓ Redis nodes configured and cluster formed.
+Waiting for cluster to stabilize and synchronize...
+✓ Cluster stabilized successfully.
+
+Cluster State: ok
+
+MASTERS
+  10.10.0.13:6379 [c16eb998] v7.0.15 slots: 10923-16383 keys: 0 mem: 1.85M
+  10.10.0.12:6379 [f3a6d06d] v7.0.15 slots: 5461-10922 keys: 0 mem: 1.85M
+  10.10.0.11:6379 [8ee93b8b] v7.0.15 slots: 0-5460 keys: 0 mem: 1.82M
+
+REPLICAS
+  10.10.0.16:6379 [d429b226] v7.0.15 replicating: 10.10.0.12:6379 mem: 1.76M
+  10.10.0.14:6379 [a14098b7] v7.0.15 replicating: 10.10.0.13:6379 mem: 1.76M
+  10.10.0.15:6379 [c40b8ae5] v7.0.15 replicating: 10.10.0.11:6379 mem: 1.76M
+

@@ -1,0 +1,7 @@
+---
+- name: Upgrade Redis on target node
+  hosts: "{{ target_node }}"
+  vars:
+    redis_version: "{{ target_version }}"
+  roles:
+    - redis

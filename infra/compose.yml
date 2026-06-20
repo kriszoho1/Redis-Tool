@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  redis-node-1:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: redis-cluster-node:latest
+    container_name: redis-node-1
+    networks:
+      redis_net:
+        ipv4_address: 10.10.0.11
+    ports:
+      - "127.0.0.1:3310:22"
+    restart: always
+
+  redis-node-2:
+    image: redis-cluster-node:latest
+    container_name: redis-node-2
+    networks:
+      redis_net:
+        ipv4_address: 10.10.0.12
+    ports:
+      - "127.0.0.1:3311:22"
+    restart: always
+
+  redis-node-3:
+    image: redis-cluster-node:latest
+    container_name: redis-node-3
+    networks:
+      redis_net:
+        ipv4_address: 10.10.0.13
+    ports:
+      - "127.0.0.1:3312:22"
+    restart: always
+
+  redis-node-4:
+    image: redis-cluster-node:latest
+    container_name: redis-node-4
+    networks:
+      redis_net:
+        ipv4_address: 10.10.0.14
+    ports:
+      - "127.0.0.1:3313:22"
+    restart: always
+
+  redis-node-5:
+    image: redis-cluster-node:latest
+    container_name: redis-node-5
+    networks:
+      redis_net:
+        ipv4_address: 10.10.0.15
+    ports:
+      - "127.0.0.1:3314:22"
+    restart: always
+
+  redis-node-6:
+    image: redis-cluster-node:latest
+    container_name: redis-node-6
+    networks:
+      redis_net:
+        ipv4_address: 10.10.0.16
+    ports:
+      - "127.0.0.1:3315:22"
+    restart: always
+
+networks:
+  redis_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.0.0/24

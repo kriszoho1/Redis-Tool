@@ -1,0 +1,36 @@
+FROM ubuntu:22.04
+
+# Avoid frontend prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH, python3, and build tools
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    python3 \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    wget \
+    curl \
+    iproute2 \
+    iputils-ping \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure SSH daemon
+RUN mkdir -p /var/run/sshd
+RUN echo 'root:root' | chpasswd
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+RUN sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
+
+# Setup SSH keys directory
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
+COPY redis_cluster_key.pub /root/.ssh/authorized_keys
+RUN chmod 600 /root/.ssh/authorized_keys
+
+# Expose SSH port
+EXPOSE 22
+
+# Start SSH server in foreground
+CMD ["/usr/sbin/sshd", "-D"]
